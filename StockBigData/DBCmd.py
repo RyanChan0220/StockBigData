@@ -1,8 +1,8 @@
 #coding=utf-8
 __author__ = 'ryan'
 
-from stockInfoCrawler.Frameworks.MySQL import MySQL
-from stockInfoCrawler.Frameworks.Excel import Excel
+from StockBigData.Frameworks.MySQL import MySQL
+from StockBigData.Frameworks.Excel import Excel
 from datetime import datetime
 import os
 from os.path import join

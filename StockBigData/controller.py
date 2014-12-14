@@ -1,9 +1,9 @@
 #coding=utf-8
 __author__ = 'Administrator'
 
-from stockInfoCrawler.Frameworks.dlTrans import DownloadTrans
-from stockInfoCrawler.analysis import Analyzer
-from stockInfoCrawler.DBCmd import *
+from StockBigData.Frameworks.dlTrans import DownloadTrans
+from StockBigData.analysis import Analyzer
+from StockBigData.DBCmd import *
 
 
 def download_excel():

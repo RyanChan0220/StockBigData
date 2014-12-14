@@ -2,7 +2,7 @@ __author__ = 'ryan'
 
 from datetime import datetime
 from datetime import timedelta
-from stockInfoCrawler.Frameworks.MySQL import MySQL
+from StockBigData.Frameworks.MySQL import MySQL
 import matplotlib.pyplot as plt
 import numpy as np
 
