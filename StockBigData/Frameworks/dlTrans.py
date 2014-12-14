@@ -7,10 +7,10 @@ import datetime
 
 
 class DownloadTrans(object):
-    def __init__(self):
+    def __init__(self, stocks_id):
         self.cf = ConfigParser.ConfigParser()
         self.cf.read("trans.conf")
-        self.stocks_id = self.cf.get("stocks", "ids").split(",")
+        self.stocks_id = stocks_id
         self.url_template = self.cf.get("global", "url_template")
         self.dst_dir = self.cf.get("global", "download_dir")
         if os.path.isdir(self.dst_dir):
