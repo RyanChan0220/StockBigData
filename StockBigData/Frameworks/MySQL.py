@@ -1,6 +1,9 @@
 __author__ = 'Ryan'
 
 import MySQLdb
+import thread
+
+my_lock = thread.allocate_lock()
 
 
 class MySQL(object):
@@ -22,26 +25,32 @@ class MySQL(object):
         self.__con.close()
 
     def execute_statement(self, statement):
+        my_lock.acquire()
         with self.__con:
             cur = self.__con.cursor()
             cur.execute(statement)
             cur.close()
+        my_lock.release()
 
     def execute_statement_with_ret(self, statement):
         data = None
+        my_lock.acquire()
         with self.__con:
             cur = self.__con.cursor()
             cur.execute(statement)
             data = cur.fetchall()
             cur.close()
+        my_lock.release()
         return data
 
     def execute_statement_many(self, statement, values):
+        my_lock.acquire()
         with self.__con:
             cur = self.__con.cursor()
             cur.executemany(statement, values)
             self.__con.commit()
             cur.close()
+        my_lock.release()
 
     def query_all_tables(self):
         statement = "SHOW tables"

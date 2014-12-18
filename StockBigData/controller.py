@@ -1,26 +1,16 @@
 #coding=utf-8
 __author__ = 'Administrator'
 
-from StockBigData.Frameworks.dlTrans import DownloadTrans
+from StockBigData.downloadTrans import DownloadTrans
 from StockBigData.analysis import Analyzer
-from StockBigData.DBCmd import *
-import ConfigParser
-from multiprocessing.dummy import Pool as ThreadPool
+from StockBigData.trans2DB import *
+from daily2DB import Daily2DB
 import time
 
 
-# 1 PROCESS 	101.31
-# 4 		17.54
-# 7		13.14
-# 8		7.93
-# 9		12.05
-# 10		8.34
-# 16		15.48
-fork_processing = 8
-
-dt = DownloadTrans()
-def download_excel(stock_ids):
-    dt.download(stock_ids)
+def download_excel():
+    dt = DownloadTrans()
+    dt.download_multi()
 
 
 def analyzer_all():
@@ -34,20 +24,17 @@ def analyzer_all():
 
 
 if __name__ == '__main__':
-    # time1 = time.time()
-    # cf = ConfigParser.ConfigParser()
-    # cf.read("trans.conf")
-    # stock_ids = cf.get("stocks", "ids").split(",")
-    # pool = ThreadPool(fork_processing)
-    # ret = pool.map(download_excel, stock_ids)
-    # pool.close()
-    # pool.join()
-    # time2 = time.time()
-    # print time2 - time1
-    # download_excel()
+    time1 = time.time()
 
-    # daily2DB("C:\\new_gdzq_v6\\T0002\\export", "daily")
-    # download_excel()
-    trans_db_multi("trans", "D:\\StockData\\trans")
+    # daily_handler = Daily2DB("daily", "C:\\new_gdzq_v6\\T0002\\export")
+    # daily_handler.daily2conf()
+    # daily_handler.daily2db_multi()
+    download_excel()
+    trans_handler = Trans2DB("trans", "D:\\StockData\\trans")
+    trans_handler.trans_db_multi()
     # analyzer_all()
+    time2 = time.time()
+    print time2 - time1
+
+
 
