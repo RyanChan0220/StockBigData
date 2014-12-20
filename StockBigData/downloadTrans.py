@@ -63,12 +63,16 @@ class DownloadTrans(object):
         for day in days:
             url = self.url_template + "date=%s&symbol=%s" % (day, stock_id)
             filename = file_dir + '/' + day + '.txt'
-            urllib.urlretrieve(url, filename)
-            if os.path.getsize(filename) < 2048:
-                os.remove(filename)
-                print "Empty file %s" % filename
-            else:
-                print "xls file write to %s" % filename
+            try:
+                urllib.urlretrieve(url, filename)
+                if os.path.getsize(filename) < 2048:
+                    os.remove(filename)
+                    print "Empty file %s" % filename
+                else:
+                    print "xls file write to %s" % filename
+            except IOError, e:
+                print "download %s failed, connect error!" % url
+
 
 
 

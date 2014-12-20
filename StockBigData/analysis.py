@@ -5,24 +5,41 @@ from datetime import timedelta
 from StockBigData.Frameworks.MySQL import MySQL
 import matplotlib.pyplot as plt
 import numpy as np
+import thread
+from multiprocessing.dummy import Pool as ThreadPool
 
+fork_processing = 1
 
 class Analyzer(object):
     stock_name = "xx000000"
+    start_date = datetime.strptime('2014-01-01;00:00:00', "%Y-%m-%d;%H:%M:%S")
+    end_date = datetime.strptime('2014-12-10;23:59:59', "%Y-%m-%d;%H:%M:%S")
 
-    def __init__(self, stock_name):
+    def __init__(self):
+        pass
+
+    def run(self, stock_name):
         self.stock_name = stock_name
-
-    def run(self):
-        start_date = datetime.strptime('2014-01-01;00:00:00', "%Y-%m-%d;%H:%M:%S")
-        end_date = datetime.strptime('2014-12-10;23:59:59', "%Y-%m-%d;%H:%M:%S")
+        print "starting analyzing %s" % self.stock_name
         # self.analysis_deal_price(stock_name, start_date, end_date, plt, 'r')
-        self.analysis_close_price(self.stock_name, start_date, end_date, plt, 'b')
+        self.analysis_close_price(self.stock_name, self.start_date, self.end_date, plt, 'b')
         # self.analy_big_trans(self.stock_name, 100000, start_date, end_date, plt, 'r')
-        self.analy_deal_type(self.stock_name, start_date, end_date, plt, 'r')
+        self.analy_deal_type(self.stock_name, self.start_date, self.end_date, plt, 'r')
         # plt.show()
         plt.clf()
-        
+
+    def run_multi(self):
+        mysql = MySQL("trans")
+        mysql.connect()
+        tables = mysql.query_all_tables()
+        stocks = []
+        for stock in tables:
+            stocks.append(stock[0])
+        mysql.close_connect()
+        pool = ThreadPool(fork_processing)
+        ret = pool.map(self.run, stocks)
+        pool.close()
+        pool.join()
 
     def analy_deal_type(self, stock_name, start_date, end_date, plt, color):
         delta_days = (end_date - start_date).days
