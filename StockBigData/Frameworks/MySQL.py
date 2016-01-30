@@ -70,6 +70,7 @@ class MySQL(object):
         self.execute_statement(statement)
 
     def insert_many(self, table, columns, values):
+        table = self.__db_name + "." + table
         col_length = len(columns.split(','))
         columns_num = "%s" + ", %s" * (col_length - 1)
         statement = """INSERT INTO %s(%s) VALUES(%s)""" % (table, columns, columns_num)
@@ -81,7 +82,7 @@ class MySQL(object):
 
     def query(self, table, column, value=None):
         if value is None:
-            statement = """SELECT %s FROM %s""" % (column, table)
+            statement = """SELECT %s FROM %s.%s""" % (column, self.__db_name, table)
         else:
             statement = """SELECT * FROM %s.%s WHERE %s = '%s'""" % (self.__db_name, table, column, value)
         return self.execute_statement_with_ret(statement)

@@ -1,14 +1,16 @@
-__author__ = 'ryan'
-
 from datetime import datetime
 from datetime import timedelta
 from StockBigData.Frameworks.MySQL import MySQL
 import matplotlib.pyplot as plt
 import numpy as np
 import thread
+from scipy.optimize import leastsq
 from multiprocessing.dummy import Pool as ThreadPool
+import collections
 
+__author__ = 'ryan'
 fork_processing = 1
+
 
 class Analyzer(object):
     stock_name = "xx000000"
@@ -93,7 +95,6 @@ class Analyzer(object):
             plt.scatter(today, perc, c=color)
         mysql.close_connect()
 
-
     def analysis_close_price(self, stock_name, start_date, end_date, plt, color):
         one_day = timedelta(days=1)
         delta_days = (end_date - start_date).days
@@ -173,3 +174,170 @@ class Analyzer(object):
         for num in array:
             ret += num[5]
         return ret
+
+
+class LeastSquareMethod(object):
+    x = None
+    y = None
+    cnt = 0
+    para0 = [1.0, 1.0]
+
+    def __init__(self, x_data, y_data):
+        self.x = x_data
+        self.y = y_data
+        print self.x
+        print self.y
+
+    def fit_func(self, para, x):
+        self.cnt += 1
+        return para[0]*x + para[1]
+
+    def cost_func(self, para, y, x):
+        return y - self.fit_func(para, x)
+
+    def runLSM(self):
+        return leastsq(self.cost_func, self.para0, args=(self.y, self.x))
+
+
+class TrendAnalyzer(object):
+    dbHandle = None
+
+    def __init__(self, dbName):
+        self.dbHandle = MySQL(dbName)
+
+    # @staticmethod
+    # def plot_stem(x, y, color):
+        # x = np.linspace(0.1, 2*np.pi, 10)
+        # markerline, stemlines, baseline = plt.stem(x, y, linefmt=color+'.', markerfmt=color+'-.', basefmt=color+'.')
+        # plt.setp(markerline, 'markerfacecolor', color)
+        # return plt
+        # plt.setp(baseline, 'color', 'r', 'linewidth', 2)
+
+    @staticmethod
+    def cov_datetime2num(dates):
+        rets = []
+        for date in dates:
+            delta = (date - dates[0]).days
+            rets.append(delta)
+        return rets
+
+    @staticmethod
+    def cov_arrayone2three(datas, num):
+        new_dates = []
+        for cnt_x in xrange(datas.shape[0]):
+            if cnt_x < (num-1):
+                None
+            elif cnt_x % (num-1) == 1:
+                tmp = []
+                for i in xrange(0, num):
+                    tmp.append(datas[cnt_x-(num-1)+i])
+                new_dates.append(tmp)
+        return np.array(new_dates)
+
+    @staticmethod
+    def cov_arrayone(datas, num):
+        new_datas = []
+        for cnt_x in xrange(datas.shape[0]):
+            if cnt_x < (num-1):
+                None
+            else:
+                tmp = []
+                for i in xrange(0, num):
+                    tmp.append(datas[cnt_x-(num-1)+i])
+                new_datas.append(tmp)
+        return np.array(new_datas)
+
+    def get_tables_maxmin_point(self):
+        self.dbHandle.connect()
+        tables = self.dbHandle.query_all_tables()
+        self.dbHandle.close_connect()
+        all = []
+        for table in tables:
+            # maxs = self.get_table_max_point(table[0])
+            # mins = self.get_table_min_point(table[0])
+            all.append(self.get_table_all_maxmin_point(table[0]))
+        return all
+            # print table
+            # self.plot_stem(all.keys(), all.values(), 'r')
+            # plt.show()
+            # for max in maxs.keys():
+            #     print max, maxs[max]
+            # for min in mins:
+            #     print min, mins[min]
+
+    def get_table_max_point(self, table_name):
+        x1 = None
+        x2 = None
+        x3 = None
+        maxP = collections.OrderedDict()
+        self.dbHandle.connect()
+        datas = self.dbHandle.query(table_name, "DATE, CLOSE_PRICE")
+        for data in datas:
+            x1 = x2
+            x2 = x3
+            x3 = data
+            if (x1 is not None) and (x2 is not None) and (x3 is not None):
+                if (x1[1] < x2[1]) and (x3[1] < x2[1]):
+                    maxP[x2[0]] = x2[1]
+                else:
+                    continue
+            else:
+                continue
+        self.dbHandle.close_connect()
+        return maxP
+
+    def get_table_min_point(self, table_name):
+        x1 = None
+        x2 = None
+        x3 = None
+        minP = collections.OrderedDict()
+        self.dbHandle.connect()
+        datas = self.dbHandle.query(table_name, "DATE, CLOSE_PRICE")
+        for data in datas:
+            x1 = x2
+            x2 = x3
+            x3 = data
+            if (x1 is not None) and (x2 is not None) and (x3 is not None):
+                if (x1[1] > x2[1]) and (x3[1] > x2[1]):
+                    minP[x2[0]] = x2[1]
+                else:
+                    continue
+            else:
+                continue
+        self.dbHandle.close_connect()
+        return minP
+
+    def get_table_all_maxmin_point(self, table_name):
+        x1 = None
+        x2 = None
+        x3 = None
+        allP = collections.OrderedDict()
+        self.dbHandle.connect()
+        datas = self.dbHandle.query(table_name, "DATE, CLOSE_PRICE")
+        for data in datas:
+            x1 = x2
+            x2 = x3
+            x3 = data
+            if (x1 is not None) and (x2 is not None) and (x3 is not None):
+                if (x1[1] > x2[1]) and (x3[1] > x2[1]):
+                    allP[x2[0]] = x2[1]
+                elif (x1[1] < x2[1]) and (x3[1] < x2[1]):
+                    allP[x2[0]] = x2[1]
+                else:
+                    continue
+            else:
+                continue
+        self.dbHandle.close_connect()
+        return allP
+
+    def get_table_all_point(self, table_name):
+        x1 = None
+        x2 = None
+        x3 = None
+        allP = collections.OrderedDict()
+        self.dbHandle.connect()
+        datas = self.dbHandle.query(table_name, "DATE, CLOSE_PRICE")
+        for data in datas:
+            allP[data[0]] = data[1]
+        self.dbHandle.close_connect()
+        return allP

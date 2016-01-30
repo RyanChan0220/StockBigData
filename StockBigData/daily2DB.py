@@ -20,8 +20,8 @@ class Daily2DB(object):
         self.path = src_dir
 
     def daily2conf(self):
-        start_date = '2014-01-01'
-        end_date = '2014-12-11'
+        start_date = '2015-01-01'
+        end_date = '2015-12-30'
         cf = ConfigParser.ConfigParser()
         cf.add_section("api")
         cf.set("api", "daily_trans", "http://market.finance.sina.com.cn/downxls.php?date=2014-01-01&symbol=sz002410")
@@ -87,15 +87,14 @@ class Daily2DB(object):
                 col_type.append("`HIGH_PRICE` FLOAT NULL")
                 col_type.append("`LOW_PRICE` FLOAT NULL")
                 col_type.append("`CLOSE_PRICE` FLOAT NULL")
-                col_type.append("`DEAL_AMOUNT` INT NULL")
+                col_type.append("`DEAL_AMOUNT` FLOAT NULL")
                 col_type.append("`DEAL_PRICE` FLOAT NULL")
                 mysql.create_table_with_delete(table_name, "ID", col_type)
                 content = txt_file.readline()
                 data = list()
-                while content:
+                while len(content) > 30:
                     content = content.replace('\n', '')
                     contents = content.split(';', 7)
-                    content = txt_file.readline()
                     if len(contents) < 7:
                         continue
                     else:
@@ -103,6 +102,7 @@ class Daily2DB(object):
                         contents[0] = datetime.strptime(contents[0], "%m/%d/%Y").strftime("%Y-%m-%d %H:%M:%S")
                         self.my_lock.release()
                         data.append(contents)
+                    content = txt_file.readline()
                 mysql.insert_many(table_name, "`DATE`, `START_PRICE`, `HIGH_PRICE`, `LOW_PRICE`, \
                 `CLOSE_PRICE`, `DEAL_AMOUNT`, `DEAL_PRICE`", data)
             except IOError, e:
